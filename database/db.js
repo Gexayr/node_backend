@@ -1,21 +1,15 @@
 const mysql = require('mysql2');
 
-// Создание подключения к базе данных
-const connection = mysql.createConnection({
+// Create a connection pool
+const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
     password: 'password',
-    database: 'rabbit_game'
+    database: 'rabbit_game',
+    waitForConnections: true,
+    connectionLimit: 10, // Adjust as needed
+    queueLimit: 0 // Unlimited queueing
 });
 
-// Проверка подключения к базе данных
-connection.connect((err) => {
-    if (err) {
-        console.error('Ошибка подключения к базе данных:', err);
-        return;
-    }
-    console.log('Успешное подключение к базе данных');
-});
-
-// Экспорт подключения к базе данных для использования в других модулях
-module.exports = connection;
+// Export the pool for use in other modules
+module.exports = pool;
