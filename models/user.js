@@ -1,22 +1,26 @@
+"use strict";
+
 const {v4: uuidv4} = require('uuid');
 // const db = require('../database/db'); // Import the database connection
 const pool = require('../database/db');
+const Game = require('./game');
 
 class User {
 
-    steps = {
-        1:10,
-        2:20,
-        3:50,
-        4:100
-    }
-
-    constructor(username, balance) {
-        this.uuid = uuidv4();
+    constructor(
+        username,
+        balance,
+        uuid = null,
+        createdAt = null,
+        updatedAt = null,
+        id = null
+    ) {
+        this.uuid = uuid ? uuid : uuidv4();
         this.username = username;
         this.balance = balance;
-        this.createdAt = new Date(); // Initialize createdAt field with current date
-        this.updatedAt = new Date(); // Initialize updatedAt field with current date
+        this.createdAt = createdAt ? createdAt : new Date();
+        this.updatedAt = updatedAt ? updatedAt : new Date();
+        this.id = id ?? id;
     }
 
 
@@ -44,7 +48,8 @@ class User {
             });
         })
             .then(function (res) {
-                return res[0];
+                const userData = res[0];
+                return new User(userData.username, userData.balance, userData.uuid, userData.createdAt, userData.updatedAt, userData.id);
             })
             .catch(function (error) {
                 console.log('///////////ERROR Find///////////');
@@ -60,7 +65,6 @@ class User {
                         reject(err);
                     } else {
                         if(!!data) {
-                            console.log(data)
                             connection.query('UPDATE users SET balance = ?, updatedAt = ? WHERE uuid = ?',
                                 [this.balance, new Date(), this.uuid], (err, result) => {
                                     if (err) {
@@ -100,12 +104,10 @@ class User {
         }
     }
 
-    async updateData(data, userData) {
+    async updateData(data, amount) {
         try {
-            this.changeBalance(-this.steps[data?.step])
-            this.uuid = userData.uuid;
-            this.createdAt = userData.createdAt;
-            this.updatedAt = userData.updatedAt;
+            this.balance = data.balance;
+            this.changeBalance(amount)
             return await this.save(data);
         } catch (error) {
             console.error('Error saving user:', error);
